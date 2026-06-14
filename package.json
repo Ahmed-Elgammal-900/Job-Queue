@@ -1,0 +1,12 @@
+{
+    "name": "job-queue",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "npx ts-node test.ts"
+    },
+    "devDependencies": {
+        "@types/node": "^25.9.3",
+        "ts-node": "^10.9.2",
+        "typescript": "^6.0.3"
+    }
+}
