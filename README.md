@@ -72,15 +72,16 @@ flowchart TD
     R -->|yes| Q
     R -->|no| F([❌ mark failed])
 ```
+
 ---
 
 ## Implementation
 
 Built using two core ideas:
 
-**FIFO Queue** — jobs are processed in the order they arrive. First in, first out.
+**FIFO Queue:** jobs are processed in the order they arrive. First in, first out.
 
-**EventEmitter** — notifies listeners at every stage of a job's lifecycle so you always know what's happening.
+**EventEmitter:** notifies listeners at every stage of a job's lifecycle so you always know what's happening.
 
 ### Job Lifecycle
 
@@ -99,9 +100,9 @@ stateDiagram-v2
 
 ```
 job-queue/
-├── queue.ts      — JobQueue class
-├── types.ts      — Job and JobHandler types
-├── test.ts       — real-world usage scenarios
+├── queue.ts      # JobQueue class
+├── types.ts      # Job and JobHandler types
+├── test.ts       # real-world usage scenarios
 └── README.md
 ```
 
@@ -132,7 +133,7 @@ queue.register('resize-image', async (data) => {
 ### 3. Add jobs
 
 ```typescript
-// Returns immediately — work happens in background
+// Returns immediately as processing happens in the background
 queue.add('send-email', { to: 'alice@example.com' });
 queue.add('resize-image', { filename: 'avatar.png' });
 ```
@@ -183,7 +184,7 @@ When a job throws an error, the queue retries it automatically until
 const queue = new JobQueue(3); // 3 total attempts (1 initial + 2 retries)
 
 queue.register('always-failing', async () => {
-    // always throws — will retry 2 times then mark as failed
+    // Always throws, triggering up to 2 retries before marking the job as failed
     throw new Error('Temporary failure');
 });
 
@@ -233,10 +234,10 @@ npm run test
 
 This pattern powers every serious backend system:
 
-- **BullMQ** — the most popular Node.js job queue, uses Redis as the backing store
-- **Sidekiq** — same pattern in Ruby
-- **Celery** — same pattern in Python
-- **AWS SQS** — managed cloud version of this exact idea
+- **BullMQ:** the most popular Node.js job queue, uses Redis as the backing store
+- **Sidekiq:** same pattern in Ruby
+- **Celery:** same pattern in Python
+- **AWS SQS:** managed cloud version of this exact idea
 
 The difference between this implementation and BullMQ is persistence (Redis survives server restarts) and concurrency (multiple workers). The core concept (decouple task creation from task execution) is identical.
 
@@ -247,7 +248,8 @@ The difference between this implementation and BullMQ is persistence (Redis surv
 Before building this I thought job queues were just "run stuff later." Now I understand the real challenge is **reliability**. It's about guaranteeing that every task eventually completes, even across failures, retries, and restarts. That's what makes a job queue genuinely useful in production, and why tools like BullMQ and RabbitMQ exist.
 
 I also learned about **Event Loop Starvation and Call Stack safety** in Node.js:
-* **The Problem:** If you recursively call an asynchronous function like `process()` immediately when a job fails or has no handler, it doesn't yield control back to Node.js. With a large volume of synchronous events or errors, this triggers an immediate `Maximum call stack size exceeded` error.
-* **The Solution (`setImmediate`):** By wrapping the recursive loop inside `setImmediate(() => this.process())`, we push the next job evaluation to the *Check phase* of the Node.js event loop. This clears the call stack, lets the CPU breathe, allows garbage collection to run, and prevents the engine from crashing under heavy, rapid loads.
+
+- **The Problem:** If you recursively call an asynchronous function like `process()` immediately when a job fails or has no handler, it doesn't yield control back to Node.js. With a large volume of synchronous events or errors, this triggers an immediate `Maximum call stack size exceeded` error.
+- **The Solution (`setImmediate`):** By wrapping the recursive loop inside `setImmediate(() => this.process())`, we push the next job evaluation to the _Check phase_ of the Node.js event loop. This clears the call stack, lets the CPU breathe, allows garbage collection to run, and prevents the engine from crashing under heavy, rapid loads.
 
 ---
