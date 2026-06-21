@@ -1,9 +1,6 @@
 # Job Queue
 
-A FIFO job queue engine implemented in TypeScript using Node.js EventEmitter.
-Supports async job handlers, configurable retry logic, full lifecycle events,
-and real-time stats — built to understand the internals behind tools like
-BullMQ and RabbitMQ without relying on any external dependencies.
+A FIFO job queue engine implemented in TypeScript using Node.js EventEmitter. Supports async job handlers, configurable retry logic, full lifecycle events, and real-time stats. It was built to understand the internals behind tools like BullMQ and RabbitMQ without relying on any external dependencies.
 
 ---
 
@@ -34,7 +31,7 @@ The fix? Return the response immediately and process the heavy work in the backg
 await Promise.all([sendEmail(), resizeImage(), notifyAnalytics()]);
 ```
 
-Better — but the user still waits for the slowest operation. And if one fails, everything fails.
+Better, but the user still waits for the slowest operation. And if one fails, everything fails.
 
 **Fire and forget?**
 
@@ -44,7 +41,7 @@ resizeImage(); // no await
 return response;
 ```
 
-Returns fast — but now you have no idea if tasks succeeded or failed. No retry logic. No visibility. Dangerous in production.
+Returns fast, but now you have no idea if tasks succeeded or failed. No retry logic. No visibility. Dangerous in production.
 
 **The real insight:** responding to the user and processing heavy work are two separate concerns. They should never be coupled together.
 
@@ -241,13 +238,13 @@ This pattern powers every serious backend system:
 - **Celery** — same pattern in Python
 - **AWS SQS** — managed cloud version of this exact idea
 
-The difference between this implementation and BullMQ is persistence (Redis survives server restarts) and concurrency (multiple workers). The core concept — decouple task creation from task execution — is identical.
+The difference between this implementation and BullMQ is persistence (Redis survives server restarts) and concurrency (multiple workers). The core concept (decouple task creation from task execution) is identical.
 
 ---
 
 ## What I Learned
 
-Before building this I thought job queues were just "run stuff later." Now I understand the real challenge is **reliability** — guaranteeing that every task eventually completes, even across failures, retries, and restarts. That's what makes a job queue genuinely useful in production, and why tools like BullMQ and RabbitMQ exist.
+Before building this I thought job queues were just "run stuff later." Now I understand the real challenge is **reliability**. It's about guaranteeing that every task eventually completes, even across failures, retries, and restarts. That's what makes a job queue genuinely useful in production, and why tools like BullMQ and RabbitMQ exist.
 
 I also learned about **Event Loop Starvation and Call Stack safety** in Node.js:
 * **The Problem:** If you recursively call an asynchronous function like `process()` immediately when a job fails or has no handler, it doesn't yield control back to Node.js. With a large volume of synchronous events or errors, this triggers an immediate `Maximum call stack size exceeded` error.
